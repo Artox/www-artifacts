@@ -1,0 +1,52 @@
+{# device_type: 'imx6qdl-hummingboard' #}
+{% extends 'base.jinja2' %}
+
+{% block body %}
+actions:
+  deploy:
+    parameters: {}
+    connections:
+      serial:
+    methods:
+      flasher:
+        commands:
+        - find . -type f
+        - sleep 3
+{# ensure dut is powered off #}
+        - /usr/sbin/btt 0
+        - sleep 1
+{# connect usd to tester #}
+        - /usr/sbin/sd-mux-ctrl -e sdwire-24 --ts
+        - sleep 3
+{# flash system #}
+        - dd status=progress conv=sync if={SYSTEM} of=/dev/disk/by-id/usb-Generic_Ultra_HS-SD_MMC_DEADBEEF0024-0:0
+{# connect usd to dut #}
+        - /usr/sbin/sd-mux-ctrl -e sdwire-24 --dut
+        - sleep 1
+  boot:
+    connections:
+      serial:
+    methods:
+      minimal: {}
+
+commands:
+  connect: telnet 127.0.0.1 2001
+  hard_reset: /usr/sbin/btt-reset
+  power_off: /usr/sbin/btt 0
+  power_on: /usr/sbin/btt 1
+
+timeouts:
+  actions:
+    dd-image:
+      minutes: 20
+    http-download:
+      minutes: 5
+{% endblock body %}
+
+{% block timeouts %}
+timeouts:
+  actions:
+    dd-image:
+      minutes: 20
+    http-download:
+      minutes: 5
